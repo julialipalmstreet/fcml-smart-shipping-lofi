@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FCML × Smart Shipping · Mobile lo-fi (aligned with the current app)</title>
+<style>
+  :root{
+    --bg:#0f1214; --surface:#1b1f23; --surface2:#22272c; --line:#2f353b;
+    --ink:#ffffff; --muted:#98a1a9; --accent:#b7f34a; --link:#5b9dff;
+    --note:#2a2716; --noteLine:#4a441f; --noteInk:#e8dfae;
+    --page:#eceff1;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:#22262a;
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;}
+  .wrap{max-width:1580px;margin:0 auto;padding:32px 28px 72px}
+
+  header{border-bottom:1px solid #c4c9ce;padding-bottom:18px;margin-bottom:26px}
+  h1{font-size:22px;margin:0 0 6px;letter-spacing:-.2px}
+  .sub{color:#6b747c;font-size:13px;margin:0;line-height:1.6}
+  .legend{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap;font-size:12px;color:#6b747c}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+  .sw.new{background:#1b1f23;border:1px dashed #6b747c}
+  .sw.old{background:#1b1f23;border:1px solid #4a5057}
+  .sw.off{background:#1b1f23;border:1px solid #fff}
+
+  .rules{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0 34px}
+  .rule{background:#fff;border:1px solid #dfe4e7;border-radius:10px;padding:12px 13px}
+  .rule b{display:block;font-size:11px;letter-spacing:.06em;color:#6b747c;font-weight:600;margin-bottom:5px}
+  .rule p{margin:0;font-size:13px;line-height:1.45}
+
+  section{margin-bottom:44px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .sec-head h2{font-size:16px;margin:0}
+  .sec-head em{font-style:normal;color:#6b747c;font-size:12px}
+
+  .row{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+  .cell{width:360px}
+  .state{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:650;letter-spacing:.04em;
+    padding:3px 9px;border-radius:6px;margin-bottom:8px;border:1px solid #cfd6db;background:#fff;color:#4a5257}
+  .state.on{background:#eef8df;border-color:#b7d98a;color:#3f6b13}
+
+  /* light screens = current app (Purchase shipping label / Size checker) */
+  .phone.light{background:#fff;border-color:#d9dde0;color:#16181a}
+  .phone.light .statusbar{color:#16181a}
+  .phone.light .navbar .t{color:#16181a}
+  .phone.light .navbar .back{color:#16181a}
+  .phone.light .toggle{background:#d3d8db}
+  .phone.light .toggle.on{background:#3ecf5a}
+  .lbody{flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column}
+  .lsec{font-size:15px;font-weight:700;color:#16181a;margin:0 0 9px}
+  .lrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+  .lrow .l{font-size:13.5px;font-weight:650}
+  .lrow .s{font-size:11.5px;color:#6b7278;margin-top:1px}
+  .lcard{background:#f2f3f4;border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+  .lcard p{margin:0;font-size:11.5px;line-height:1.5;color:#3b4045}
+  .bxic{width:21px;height:21px;border:1.7px solid #2b2f33;border-radius:4px;flex:0 0 auto}
+  .lhr{height:1px;background:#e0e3e5;margin:8px -16px}
+  .lnk{color:#1a73e8;font-weight:650;font-size:11.5px;text-align:right;line-height:1.25}
+  .lkv{display:flex;justify-content:space-between;font-size:12.5px;font-weight:650;padding:3px 0}
+  .lpay{border:1.6px solid #16181a;border-radius:10px;padding:8px 11px;margin-bottom:7px}
+  .lpay.alt{border:1px solid transparent;background:#f5f6f7}
+  .lpay .t{font-size:12.5px;font-weight:650;margin:0}
+  .lpay .d{font-size:11.5px;color:#6b7278;margin:2px 0 0}
+  .lfoot{padding:10px 16px 14px;border-top:1px solid #e6e8ea}
+  .lbtn{height:42px;border-radius:21px;background:var(--accent);color:#12160c;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:13.5px}
+  .lcap{font-size:10px;letter-spacing:.07em;color:#6b7278;font-weight:650;margin:12px 0 8px}
+  .lchip{border:1px solid #dde0e3;border-radius:10px;padding:8px 10px}
+  .lchip.on{background:#16181a;border-color:#16181a;color:#fff}
+  .lchip .t{font-size:12px;font-weight:650}
+  .lchip .d{font-size:10.5px;color:#6b7278;margin-top:1px}
+  .lchip.on .d{color:#b9bfc4}
+  .lin{background:#f5f6f7;border:1px solid #e3e6e8;border-radius:9px;padding:6px 2px;text-align:center}
+  .lin .lb{font-size:10px;color:#6b7278}
+  .lin .v{font-size:15px;font-weight:650;margin:1px 0}
+  .lin .u{font-size:10px;color:#6b7278}
+  .lok{background:#e9f8e9;border:1.5px solid #2e7d32;border-radius:10px;padding:10px 12px}
+  .lok .t{font-size:12.5px;font-weight:700;color:#1e6b23;margin:0 0 3px;display:flex;align-items:center;gap:6px}
+  .lok .d{font-size:11.5px;color:#2b6b30;margin:0;line-height:1.5}
+  .lok .sq{width:11px;height:11px;border:2px solid #2e7d32;border-radius:3px;flex:0 0 auto}
+  .dash{border:1px dashed #8f979d}
+
+  .phone{
+    width:360px;height:720px;border-radius:26px;overflow:hidden;position:relative;
+    display:flex;flex-direction:column;background:var(--bg);border:1px solid #2b3035;
+    color:var(--ink);
+  }
+  .phone.tall{height:900px}
+  .statusbar{height:28px;display:flex;justify-content:space-between;align-items:center;
+    padding:0 18px;font-size:11px;color:#cfd6dc;flex:0 0 auto}
+  .navbar{height:50px;display:flex;align-items:center;justify-content:center;position:relative;flex:0 0 auto}
+  .navbar .t{font-size:15px;font-weight:650}
+  .navbar .back{position:absolute;left:16px;font-size:17px;color:#dfe5ea}
+  .navbar .act{position:absolute;right:14px;background:var(--accent);color:#12160c;
+    font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:15px}
+
+  .body{flex:1;overflow:hidden;padding:0 16px;display:flex;flex-direction:column;gap:12px}
+
+  .grp{padding:10px 0 0}
+  .grp + .grp{border-top:1px solid var(--line);margin-top:6px}
+  .h{font-size:14px;font-weight:650;margin:0 0 3px}
+  .p{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
+  .p .lk{color:var(--link)}
+  .lk{color:var(--link)}
+
+  .card{background:var(--surface);border-radius:12px;padding:12px;display:flex;gap:10px;align-items:flex-start}
+  .card.new{border:1px dashed #5a6168}
+  .card .t{font-size:13.5px;font-weight:600;margin:0 0 2px}
+  .card .d{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
+  .card .d b{color:#fff}
+  .ico{width:30px;height:30px;border-radius:6px;background:#2f353b;flex:0 0 auto}
+  .ico.usps{background:#e9eef2}
+
+  .toggle{width:42px;height:24px;border-radius:12px;background:#3a4046;position:relative;flex:0 0 auto;margin-left:auto}
+  .toggle:after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff}
+  .toggle.on{background:#3ecf5a}
+  .toggle.on:after{left:20px}
+
+  .badge{font-size:10px;padding:2px 7px;border-radius:5px;background:#2f353b;color:#b9c2c9;margin-left:auto}
+  .badge.new{background:#2b3a2a;color:#b7f34a}
+
+  .chev{color:#7d868e;margin-left:auto;font-size:15px}
+  .btn{height:40px;border-radius:20px;background:var(--accent);color:#12160c;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:13.5px}
+  .field{background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px}
+
+  .note{background:var(--note);border:1px solid var(--noteLine);border-radius:8px;padding:8px 10px;
+    font-size:10.8px;line-height:1.5;color:var(--noteInk)}
+  .note b{color:#fff0b8}
+
+  .caption{margin-top:10px;font-size:12px;color:#4a5257;line-height:1.6}
+  .caption > b{display:block;font-size:12.5px;color:#22262a;margin-bottom:2px}
+  .caption li b{display:inline;font-size:inherit;color:#22262a}
+  .caption ul{margin:4px 0 0;padding-left:16px}
+  .caption li{margin:2px 0}
+
+  .bcard{background:var(--surface);border-radius:12px;padding:12px}
+  .kv{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:#dfe5ea}
+  .kv span:last-child{font-weight:600;color:#fff}
+  .kv.total{border-top:1px solid var(--line);margin-top:7px;padding-top:9px;font-size:14px}
+  .banner{background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:11.5px;line-height:1.5;color:#c9d1d8}
+  .banner .t{font-weight:650;color:#fff;margin-bottom:2px;font-size:12px}
+  .thumb{width:42px;height:42px;border-radius:7px;background:#2f353b;flex:0 0 auto}
+  .meta{display:flex;gap:10px;align-items:flex-start}
+
+  /* live room */
+  .live{background:#14100f}
+  .live .stage{flex:1;background:linear-gradient(160deg,#2a2320,#1a1614);position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:0 14px 12px}
+  .chat{display:flex;flex-direction:column;gap:6px;font-size:11px;color:#d7dde2;margin-bottom:10px}
+  .chat .row2{display:flex;gap:7px;align-items:center}
+  .av{width:17px;height:17px;border-radius:50%;background:#3a4147;flex:0 0 auto}
+  .soldbar{background:#1b1f23;border-radius:10px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .soldbar .l{font-size:13px;font-weight:650}
+  .soldbar .r{font-size:15px;font-weight:700}
+  .shiprow{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#cfd6dc;margin-bottom:9px}
+  .shiprow .pin{color:#8b949c}
+  .livebtn{height:38px;border-radius:10px;background:#2a2f34;color:#8b949c;display:flex;align-items:center;justify-content:center;font-size:12.5px}
+
+  .tab{font-size:11.5px;padding:6px 11px;border-radius:14px;border:1px solid var(--line);color:#c9d1d8;white-space:nowrap}
+  .tab.on{background:#fff;color:#12160c;border-color:#fff;font-weight:700}
+  .req{font-size:11.5px;color:var(--muted);line-height:1.55;margin:0;padding-left:16px}
+  .req li{margin:3px 0}
+  @media (max-width:1180px){ .rules{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>FCML × Smart Shipping · Mobile lo-fi</h1>
+  <p class="sub">Aligned with the current app: dark “Shipping policies” list + light Purchase shipping label / Size checker.<br>
+  <b>Prices always use the buyer-facing format</b>: <code>$7.49 (up to 5lb)</code> / <code>$1.49 (up to 3.5 oz)</code> — consistent with the live-room footer, checkout and seller settings.<br>
+  <b>FCML is off by default</b> and turned on manually in Smart Shipping settings; the service row on the label page stays the same — only the fine print and the amounts differ.</p>
+  <div class="legend">
+    <span><i class="sw new"></i>New block (dashed)</span>
+    <span><i class="sw old"></i>Existing component (reused)</span>
+    <span><i class="sw off"></i>Default-off state</span>
+  </div>
+</header>
+
+<div class="rules">
+  <div class="rule"><b>Default state</b><p>The FCML toggle is off by default and only takes effect once the seller turns it on</p></div>
+  <div class="rule"><b>One spec per card</b><p>A card states only the tier this order hits — letter spec or package spec, never both</p></div>
+  <div class="rule"><b>Price format</b><p>$1.49 (up to 3.5 oz) · $7.49 (up to 5lb) · $6.00 upgrade</p></div>
+  <div class="rule"><b>TBD</b><p>Rollback when a top-up is abandoned, orders already paid when the toggle goes off, accumulation window when Cross-Channel is on</p></div>
+</div>
+
+<!-- ================= Seller ================= -->
+<section>
+  <div class="sec-head"><h2>1. Seller</h2><em>3 screens · M1 in two states (FCML off / on) + M2 Smart Shipping settings (where the seller turns FCML on)</em></div>
+  <div class="row">
+
+    <!-- M1 · FCML off -->
+    <div class="cell">
+      <div class="state">FCML off · default</div>
+      <div class="phone">
+        <div class="statusbar"><span>4:49</span><span>▮▮▮ 5G 95</span></div>
+        <div class="navbar"><span class="back">‹</span><span class="t">Shop Policies</span></div>
+        <div class="body">
+          <div class="grp">
+            <p class="h">Shipping days</p>
+            <div class="card" style="margin-top:8px"><div class="ico"></div><div><p class="t">Ships on the following Tue and Mon</p></div><span class="chev">›</span></div>
+          </div>
+
+          <div class="grp" style="display:flex;align-items:center;gap:10px">
+            <div><p class="h">Local pickup</p><p class="p">Let nearby buyers skip shipping and collect in person.</p></div>
+            <span class="toggle on"></span>
+          </div>
+
+          <div class="grp">
+            <p class="h">Shipping policies</p>
+            <p class="p" style="margin-bottom:8px">Your default rate auto-applies to new LIVE shows, Purges and Marketplace listings. <span class="lk">Learn more</span></p>
+
+            <div class="card" style="margin-bottom:8px">
+              <div class="ico"></div>
+              <div>
+                <p class="t">Smart Shipping</p>
+                <p class="d">$7.49 (up to 5lb)</p>
+              </div>
+              <span class="badge">Default</span>
+            </div>
+
+            <div class="card">
+              <div class="ico"></div>
+              <div><p class="t">A</p><p class="d">Flat Rate: $2 per order, $1 per additional item.</p></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+
+          <div class="grp">
+            <p class="h">Cross-Channel Combined Shipping</p>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <p class="p" style="flex:1">When a buyer orders across your LIVE shows, Purges, or Marketplace, they only pay your base shipping fee once. Every additional order gets the lower add-on rate.</p>
+              <span class="toggle"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <b>M1 · Shop Policies — FCML off (default)</b>
+        <ul>
+          <li>The Smart Shipping subtitle shows only the <b>tier in effect</b>: $7.49 (up to 5lb)</li>
+          <li>Cross-Channel stays where it is (policy level), with <b>no letter-related copy</b> and no ⓘ hint row</li>
+          <li>Identical to what the seller sees today — no new rows</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M1 · FCML on -->
+    <div class="cell">
+      <div class="state on">FCML on</div>
+      <div class="phone">
+        <div class="statusbar"><span>4:49</span><span>▮▮▮ 5G 95</span></div>
+        <div class="navbar"><span class="back">‹</span><span class="t">Shop Policies</span></div>
+        <div class="body">
+          <div class="grp">
+            <p class="h">Shipping days</p>
+            <div class="card" style="margin-top:8px"><div class="ico"></div><div><p class="t">Ships on the following Tue and Mon</p></div><span class="chev">›</span></div>
+          </div>
+
+          <div class="grp" style="display:flex;align-items:center;gap:10px">
+            <div><p class="h">Local pickup</p><p class="p">Let nearby buyers skip shipping and collect in person.</p></div>
+            <span class="toggle on"></span>
+          </div>
+
+          <div class="grp">
+            <p class="h">Shipping policies</p>
+            <p class="p" style="margin-bottom:8px">Your default rate auto-applies to new LIVE shows, Purges and Marketplace listings. <span class="lk">Learn more</span></p>
+
+            <div class="card" style="margin-bottom:8px">
+              <div class="ico"></div>
+              <div>
+                <p class="t">Smart Shipping</p>
+                <p class="d">$7.49 (up to 5lb)<br>$1.49 (up to 3.5 oz)</p>
+              </div>
+              <span class="badge">Default</span>
+            </div>
+
+            <div class="card">
+              <div class="ico"></div>
+              <div><p class="t">A</p><p class="d">Flat Rate: $2 per order, $1 per additional item.</p></div>
+              <span class="chev">›</span>
+            </div>
+          </div>
+
+          <div class="grp">
+            <p class="h">Cross-Channel Combined Shipping</p>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <p class="p" style="flex:1">When a buyer orders across your LIVE shows, Purges, or Marketplace, they only pay your base shipping fee once. Every additional order gets the lower add-on rate.</p>
+              <span class="toggle"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <b>M1 · Shop Policies — FCML on</b>
+        <ul>
+          <li>The only change: the subtitle gains a second line, <b>$1.49 (up to 3.5 oz)</b>, alongside $7.49 (up to 5lb)</li>
+          <li>Every other component, order and toggle state is <b>identical line for line</b> to the off state</li>
+          <li>The upgrade and $6.00 top-up rules stay off this screen; they sit in the buyer-side B0.5 Learn more</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- M2 · Smart Shipping settings -->
+    <div class="cell">
+      <div class="state">Smart Shipping settings · FCML off by default</div>
+      <div class="phone tall">
+        <div class="statusbar"><span>4:49</span><span>▮▮▮ 5G 95</span></div>
+        <div class="navbar"><span class="back">‹</span><span class="t">Smart Shipping</span><span class="act">Save</span></div>
+        <div class="body">
+          <div class="grp">
+            <p class="h">Shipping carrier &amp; service</p>
+            <p class="p" style="margin-bottom:9px">Orders from the same buyer are grouped into one package. If the total weight exceeds 5 lbs, we'll split the order into multiple packages and charge shipping for each package.</p>
+
+            <div class="card new" style="margin-bottom:8px">
+              <div class="ico usps"></div>
+              <div style="flex:1">
+                <p class="t">USPS First-Class Mail Letter <span class="badge new" style="margin-left:0;vertical-align:middle">New</span></p>
+                <p class="d">5–14 business days; <b>$1.49 (up to 3.5 oz)</b><br>Max 5 items · value ≤ $20 · no official tracking · label non-refundable · <span class="lk">Learn more</span></p>
+              </div>
+              <span class="toggle"></span>
+            </div>
+
+            <div class="card">
+              <div class="ico usps"></div>
+              <div style="flex:1">
+                <p class="t">USPS Ground Advantage</p>
+                <p class="d">2–5 business days; <b>$7.49 (up to 5lb)</b><br>Domestic shipments up to 5 lbs (80 oz)</p>
+              </div>
+            </div>
+
+            <div class="note" style="margin-top:9px">
+              <b>This is the spot</b>: where the seller turns FCML on, off by default. Left off → every order still ships at $7.49, exactly as today.
+            </div>
+          </div>
+
+          <div class="grp" style="display:flex;align-items:center;gap:10px">
+            <p class="h" style="margin:0">Set as default shipping policy</p>
+            <span class="toggle on"></span>
+          </div>
+
+          <div class="grp">
+            <p class="h">Default item weight</p>
+            <p class="p" style="margin-bottom:9px">Every item needs a weight so we can automatically create packages and calculate shipping. This default applies only to items without a weight and won't override existing item weights.</p>
+            <div style="display:flex;gap:10px">
+              <div class="field" style="flex:1">Default item weight* <span>1 ⌄</span></div>
+              <div class="field" style="flex:1">Unit <span>OZ ⌄</span></div>
+            </div>
+            <div class="note" style="margin-top:9px">
+              <b>This field matters more with the new tier</b>: at 1 oz four items already approach 3.5 oz, and the fifth upgrades the order and triggers the $6.00 buyer top-up.
+            </div>
+          </div>
+
+          <div class="grp">
+            <div class="note" style="background:#1d2126;border-color:#33393f;color:#b9c2c9">
+              <b style="color:#fff">New line of copy (after the split-package note)</b><br>
+              If the shipment exceeds 5 lbs, the second package's label is charged to you.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <b>M2 · Smart Shipping settings (where the seller turns FCML on)</b>
+        <ul>
+          <li>Both tiers, the default-policy toggle and the default weight all sit on this screen; the <b>FCML toggle is off by default</b></li>
+          <li>The FCML description carries <b>Learn more</b>, which holds the full conditions (category, packaging, payout)</li>
+          <li>This switch only decides whether the letter tier is available; which tier an order takes is decided by the order itself — see “3. Seller fulfillment”</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Buyer ================= -->
+<section>
+  <div class="sec-head"><h2>2. Buyer</h2><em>2 screens · the live room is the first touchpoint</em></div>
+  <div class="row">
+
+    <!-- B0 · live room -->
+    <div class="cell">
+      <div class="phone live">
+        <div class="statusbar"><span>4:55</span><span>▮▮▮ 5G 93</span></div>
+        <div class="stage">
+          <div style="position:absolute;top:10px;left:14px;font-size:11px;color:#dfe5ea">LiveWithLuna · 874</div>
+          <div class="chat">
+            <div class="row2"><span class="av"></span><span>Mira_04</span></div>
+            <div style="font-size:12.5px;font-weight:600;color:#fff">pouch</div>
+            <div class="row2"><span class="av"></span><span>Riley</span><span style="background:#2f353b;padding:1px 5px;border-radius:4px;font-size:9.5px">Mod</span></div>
+            <div style="font-size:12.5px;font-weight:600;color:#fff">4 envelopes in play?!</div>
+          </div>
+          <div class="soldbar">
+            <div class="l">6 🔥 hits 38 spots #5</div>
+            <div class="r">$17</div>
+          </div>
+          <div class="shiprow">
+            <span>🚚</span><span style="color:#b7f34a;font-weight:600">$1.49 (up to 3.5 oz)</span>
+            <span class="pin">📍</span><span>SPRINGFIELD, IL</span>
+          </div>
+          <div class="livebtn">Awaiting new item</div>
+        </div>
+      </div>
+      <div class="caption">
+        <b>B0 · Live room footer (first touchpoint)</b>
+        <ul>
+          <li>Same structure as your screenshot: 🚚 + price + 📍 + buyer location</li>
+          <li>Today it reads <code>$7.49 (up to 5lb)</code>; when an order hits the letter tier it becomes <code>$1.49 (up to 3.5 oz)</code></li>
+          <li>The <b>price is tappable</b> → opens the Shipping &amp; Policies sheet on the next screen</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- B0.5 · detail sheet -->
+    <div class="cell">
+      <div class="phone tall" style="height:880px">
+        <div class="statusbar"><span>5:07</span><span>▮▮▮ 5G 91</span></div>
+        <div style="height:24px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line)"><span style="width:34px;height:4px;border-radius:2px;background:#4a5057"></span></div>
+        <div class="navbar"><span class="t">Shipping &amp; Policies</span></div>
+        <div class="body">
+          <p class="h" style="margin-top:2px">Shipping</p>
+
+          <div class="bcard">
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <div class="ico" style="border-radius:50%"></div>
+              <div style="flex:1">
+                <p class="t" style="margin:0;font-size:13px;font-weight:600">Shipping rate</p>
+                <p class="d" style="font-size:11.5px;color:var(--muted);margin:2px 0 0">Shipping fee: <b style="color:#fff">$1.49 (up to 3.5 oz)</b> <span style="color:#8b949c">ⓘ</span></p>
+              </div>
+            </div>
+            <div style="height:1px;background:var(--line);margin:10px 0"></div>
+            <div style="display:flex;gap:10px">
+              <span style="font-size:14px">🤝</span>
+              <div><p class="t" style="margin:0;font-size:12.5px;font-weight:600">Local pickup from</p><p class="d" style="font-size:11.5px;color:var(--muted);margin:2px 0 0">Springfield, IL</p></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:9px">
+              <span style="font-size:14px">🚚</span>
+              <div><p class="t" style="margin:0;font-size:12.5px;font-weight:600">Ships from</p><p class="d" style="font-size:11.5px;color:var(--muted);margin:2px 0 0">SPRINGFIELD, IL</p></div>
+            </div>
+          </div>
+
+          <div class="bcard" style="border:1px dashed #5a6168">
+            <p class="t" style="margin:0 0 4px;font-size:13px;font-weight:650">How shipping fees work</p>
+            <p class="d" style="font-size:11.5px;color:var(--muted);margin:0;line-height:1.6">Orders qualify for letter shipping if they weigh <b style="color:#fff">3.5 oz or less</b>, contain <b style="color:#fff">5 items or fewer</b>, and cost <b style="color:#fff">$20 or less</b>.<br><br>Otherwise, USPS Ground Advantage shipping costs <b style="color:#fff">$7.49 (up to 5 lb)</b>.<br><br><span class="lk">Learn more</span></p>
+          </div>
+
+          <div class="bcard">
+            <p class="t" style="margin:0 0 3px;font-size:13px;font-weight:650">Combined shipping <span style="color:#3ecf5a">ON</span></p>
+            <p class="d" style="font-size:11.5px;color:var(--muted);margin:0;line-height:1.55">Your first order is charged the base shipping fee. Additional orders from this seller across LIVE shows qualify for the lower add-on fee. <span class="lk">Learn more</span></p>
+          </div>
+
+          <p class="h" style="margin-top:2px">Sales tax</p>
+          <div class="bcard"><p class="d" style="font-size:11.5px;color:var(--muted);margin:0;line-height:1.55">We're required by law to collect sales tax and any applicable fees for certain tax authorities. Sales tax will vary depending on the state.</p></div>
+
+          <p class="h" style="margin-top:2px">Returns and exchanges</p>
+          <div class="bcard"><p class="d" style="font-size:11.5px;color:var(--muted);margin:0">• Returns and exchanges are not accepted</p></div>
+        </div>
+      </div>
+      <div class="caption">
+        <b>B0.5 · Shipping &amp; Policies (opened by tapping the price)</b>
+        <ul>
+          <li>Same structure as your screenshot: Shipping rate / Local pickup / Ships from / Combined shipping / Sales tax / Returns</li>
+          <li>The only new block is <b>How shipping fees work</b>: the three qualification rules plus “otherwise it’s $7.49”; no amount baked into the title</li>
+          <li>When the order doesn’t qualify this block is hidden and only $7.49 (up to 5lb) shows</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= Fulfillment ================= -->
+<section>
+  <div class="sec-head"><h2>3. Seller fulfillment</h2><em>2 screens · the label page in two states (letter order / package order), one state per order</em></div>
+  <div class="row">
+
+    <!-- L1 · purchase label, letter order -->
+    <div class="cell">
+      <div class="state on">Letter order · hits the letter tier</div>
+      <div class="phone light" style="height:800px">
+        <div class="statusbar"><span>2:44</span><span>▮▮▮ 5G 90</span></div>
+        <div class="navbar"><span class="back">‹</span><span class="t">Purchase shipping label</span><span class="act" style="background:transparent;color:#16181a;font-size:16px;padding:0;right:16px">⋯</span></div>
+        <div class="lbody">
+          <p class="lsec">Shipping service</p>
+
+          <div class="lrow" style="padding-top:0"><span class="l">Smart shipping</span><span class="toggle on"></span></div>
+          <div class="lcard" style="margin:6px 0 9px">
+            <span class="bxic"></span>
+            <div>
+              <p style="margin:0 0 3px"><b style="color:#16181a">First-Class Mail Letter</b><span class="badge new" style="margin-left:5px;vertical-align:middle">New</span></p>
+              <p style="margin:0">Mailpieces must weigh <b style="color:#16181a">3.5 oz or less</b>, contain <b style="color:#16181a">5 items or fewer</b> with a total value of <b style="color:#16181a">$20 or less</b>, and fit in a standard envelope. Bubble mailers and rigid inserts are not allowed.</p>
+            </div>
+          </div>
+
+          <div class="lhr"></div>
+          <div class="lrow" style="padding:8px 0">
+            <div><span class="l">Optional shipping proof</span><div class="s">Provide shipment proof</div></div>
+            <span class="chev" style="color:#9aa2a8">›</span>
+          </div>
+          <div class="lhr"></div>
+          <div class="lkv"><span>Total shipping fee paid by buyer</span><span>$1.49</span></div>
+          <div class="lkv"><span>Total shipping label cost</span><span>$1.36</span></div>
+          <div class="lhr"></div>
+          <p class="lsec" style="font-size:13px;margin:0 0 7px">Payment methods</p>
+          <div class="lpay"><p class="t">Sales Earnings</p><p class="d">$1.36 will be deducted from your earnings.</p></div>
+          <div class="lpay alt" style="display:flex;align-items:center;gap:8px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;border:1.4px solid #16181a;border-radius:5px;background:#fff;padding:1px 7px;font-size:11px;font-weight:700">Pay</span>
+            <span style="font-size:12.5px;font-weight:650">Apple Pay</span>
+          </div>
+        </div>
+        <div class="lfoot"><div class="lbtn">Purchase label / $1.36</div></div>
+      </div>
+      <div class="caption">
+        <b>L1 · Purchase shipping label — letter order</b>
+        <ul>
+          <li>The service row is unchanged: still <b>Smart shipping</b> with the toggle on — the letter tier is not a second switch</li>
+          <li>The fine print covers <b>only the letter spec</b> (First-Class Mail Letter); the Smart Shipping Package paragraph does not appear</li>
+          <li>Buyer paid $1.49, label costs $1.36; an order that misses the letter tier falls through to L2</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- L2 · purchase label, package order -->
+    <div class="cell">
+      <div class="state">Package order · misses the letter tier</div>
+      <div class="phone light" style="height:800px">
+        <div class="statusbar"><span>2:44</span><span>▮▮▮ 5G 90</span></div>
+        <div class="navbar"><span class="back">‹</span><span class="t">Purchase shipping label</span><span class="act" style="background:transparent;color:#16181a;font-size:16px;padding:0;right:16px">⋯</span></div>
+        <div class="lbody">
+          <p class="lsec">Shipping service</p>
+
+          <div class="lrow" style="padding-top:0"><span class="l">Smart shipping</span><span class="toggle on"></span></div>
+          <div class="lcard" style="margin:6px 0 9px">
+            <span class="bxic"></span>
+            <div>
+              <p style="margin:0 0 3px"><b style="color:#16181a">Smart Shipping Package</b></p>
+              <p style="margin:0">Packages must weigh <b style="color:#16181a">5 lb or less</b>, have a total volume of <b style="color:#16181a">1 cubic foot or less</b>, and measure <b style="color:#16181a">no more than 22 inches on any side</b>.</p>
+            </div>
+          </div>
+
+          <div class="lrow" style="padding:0 0 8px">
+            <span class="l">Unsure about your package size?</span>
+            <span class="lnk">Size<br>checker</span>
+          </div>
+          <div class="lhr"></div>
+          <div class="lrow" style="padding:8px 0">
+            <div><span class="l">Optional shipping proof</span><div class="s">Provide shipment proof</div></div>
+            <span class="chev" style="color:#9aa2a8">›</span>
+          </div>
+          <div class="lhr"></div>
+          <div class="lkv"><span>Total shipping fee paid by buyer</span><span>$0.00</span></div>
+          <div class="lkv"><span>Total shipping label cost</span><span>$6.75</span></div>
+          <div class="lhr"></div>
+          <p class="lsec" style="font-size:13px;margin:0 0 7px">Payment methods</p>
+          <div class="lpay"><p class="t">Sales Earnings</p><p class="d">$6.75 will be deducted from your earnings.</p></div>
+          <div class="lpay alt" style="display:flex;align-items:center;gap:8px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;border:1.4px solid #16181a;border-radius:5px;background:#fff;padding:1px 7px;font-size:11px;font-weight:700">Pay</span>
+            <span style="font-size:12.5px;font-weight:650">Apple Pay</span>
+          </div>
+        </div>
+        <div class="lfoot"><div class="lbtn">Purchase label / $6.75</div></div>
+      </div>
+      <div class="caption">
+        <b>L2 · Purchase shipping label — package order</b>
+        <ul>
+          <li>This is the page as it ships today, kept as-is: $0.00 / $6.75, Size checker, $6.75 deducted</li>
+          <li>The fine print covers <b>only the package spec</b> (Smart Shipping Package); the letter spec does not appear</li>
+          <li>Differs from L1 in three places only: fine print, amounts, and the presence of Size checker; the service row and toggle are identical</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer style="border-top:1px solid #c4c9ce;padding-top:16px;color:#6b747c;font-size:12px">
+  7 screens · styled after the current app · buyer-facing prices · amounts not yet reconciled with Finance
+</footer>
+
+</div>
+</body>
+</html>
